@@ -40,6 +40,17 @@ def parser():
     publish.add_argument("fingerprint")
     release = sub.add_parser("release")
     release.add_argument("release_id")
+    cohort = sub.add_parser("cohort-compare")
+    cohort.add_argument("product")
+    cohort.add_argument("first_start")
+    cohort.add_argument("first_end")
+    cohort.add_argument("second_start")
+    cohort.add_argument("second_end")
+    cohort.add_argument("--min-tested-units", type=int, default=1)
+    cohort.add_argument("--min-coverage", type=float, default=0.8)
+    cohort.add_argument("--allow-lot-changes", action="store_true")
+    drift = sub.add_parser("cohort-drift")
+    drift.add_argument("release_id")
     return root
 
 
@@ -71,6 +82,15 @@ def main(argv=None):
             result = service.publish(args.release_id, args.product, args.start, args.end, args.fingerprint)
         elif args.command == "release":
             result = service.get_release(args.release_id)
+        elif args.command == "cohort-compare":
+            result = service.cohort_compare(
+                args.product, args.first_start, args.first_end,
+                args.second_start, args.second_end,
+                min_tested_units=args.min_tested_units,
+                min_coverage=args.min_coverage,
+                require_same_lots=not args.allow_lot_changes)
+        elif args.command == "cohort-drift":
+            result = service.cohort_drift(args.release_id)
         else:
             raise AssertionError(args.command)
     except (DomainError, OSError, ValueError, json.JSONDecodeError) as exc:

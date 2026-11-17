@@ -1,6 +1,7 @@
 from .analytics import CycleAnalytics
 from .audit import IntegrityAudit
 from .batch import BatchReceiver
+from .cohorts import CohortComparison
 from .contracts import DomainError
 from .design import DesignRules
 from .diagnostics import OperationsView
@@ -23,6 +24,7 @@ class CycleService:
         self.audit_engine = IntegrityAudit(self.store)
         self.operations = OperationsView(self.store)
         self.throughput = ThroughputView(self.store)
+        self.cohort_engine = CohortComparison(self.store)
 
     def ingest(self, event):
         return self.ledger.ingest(event)
@@ -97,3 +99,12 @@ class CycleService:
 
     def cohorts(self, product, start, end):
         return self.throughput.cohorts(product, start, end)
+
+    def cohort_compare(self, product, first_start, first_end, second_start, second_end,
+                       *, min_tested_units=1, min_coverage=0.8, require_same_lots=True):
+        engine = CohortComparison(self.store, min_tested_units=min_tested_units,
+                                  min_coverage=min_coverage, require_same_lots=require_same_lots)
+        return engine.compare(product, first_start, first_end, second_start, second_end)
+
+    def cohort_drift(self, release_id):
+        return self.cohort_engine.drift(release_id)

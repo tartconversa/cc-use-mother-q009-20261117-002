@@ -129,6 +129,20 @@ def create_app(db_path=None):
     def cohorts(product: str, window_start: str, window_end: str):
         return service.cohorts(product, window_start, window_end)
 
+    @app.get("/reports/{product}/cohort-compare")
+    def cohort_compare(product: str, first_start: str, first_end: str,
+                       second_start: str, second_end: str,
+                       min_tested_units: int = 1, min_coverage: float = 0.8,
+                       require_same_lots: bool = True):
+        return service.cohort_compare(
+            product, first_start, first_end, second_start, second_end,
+            min_tested_units=min_tested_units, min_coverage=min_coverage,
+            require_same_lots=require_same_lots)
+
+    @app.get("/releases/{release_id}/cohort-drift")
+    def cohort_drift(release_id: str):
+        return service.cohort_drift(release_id)
+
     @app.post("/releases")
     def publish(body: ReleaseBody):
         return service.publish(body.release_id, body.product, body.window_start, body.window_end,
